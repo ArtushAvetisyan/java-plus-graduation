@@ -1,0 +1,82 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+      routes:
+        - id: admin-categories-route
+          uri: lb://main-service
+          predicates:
+            - Path=/admin/categories/**
+            - Method=POST,DELETE,PATCH
+
+        - id: public-categories-route
+          uri: lb://main-service
+          predicates:
+            - Path=/categories/**
+            - Method=GET
+
+        - id: admin-compilations-route
+          uri: lb://main-service
+          predicates:
+            - Path=/admin/compilations/**
+            - Method=POST,PATCH,DELETE
+
+        - id: public-compilations-route
+          uri: lb://main-service
+          predicates:
+            - Path=/compilations/**
+            - Method=GET
+
+        - id: admin-events-route
+          uri: lb://main-service
+          predicates:
+            - Path=/admin/events/**
+            - Method=GET,PATCH
+
+        - id: public-events-route
+          uri: lb://main-service
+          predicates:
+            - Path=/events/**
+            - Method=GET
+
+        - id: user-requests-route
+          uri: lb://main-service
+          predicates:
+            - Path=/users/*/requests/**
+            - Method=GET,POST,PATCH
+
+        - id: private-events-route
+          uri: lb://main-service
+          predicates:
+            - Path=/users/**
+            - Method=GET,POST,PATCH
+
+        - id: admin-ratings-route
+          uri: lb://main-service
+          predicates:
+            - Path=/v1/admin/ratings/**
+            - Method=GET
+
+        - id: public-ratings-route
+          uri: lb://main-service
+          predicates:
+            - Path=/v1/ratings
+            - Method=GET
+
+        - id: private-ratings-route
+          uri: lb://main-service
+          predicates:
+            - Path=/v1/*/ratings/**
+            - Method=GET,POST,DELETE
+
+        - id: admin-users-route
+          uri: lb://main-service
+          predicates:
+            - Path=/admin/users/**
+            - Method=POST,GET,DELETE
