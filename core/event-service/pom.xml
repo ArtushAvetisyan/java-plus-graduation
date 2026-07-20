@@ -89,7 +89,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ru.yandex.practicum.core.request.RequestServiceApplication</mainClass>
+                    <mainClass>ru.yandex.practicum.core.event.EventServiceApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>

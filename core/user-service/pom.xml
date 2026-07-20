@@ -83,7 +83,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ru.yandex.practicum.commerce.shopping.cart.ShoppingCartApplication</mainClass>
+                    <mainClass>ru.yandex.practicum.core.user.UserServiceApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
