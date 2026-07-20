@@ -47,7 +47,7 @@ import static ru.yandex.practicum.core.interaction.dto.event.EventState.PUBLISHE
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int MIN_HOURS_BEFORE_EVENT = 2;
     private static final int DEFAULT_STATS_RANGE_MONTHS = 6;
 

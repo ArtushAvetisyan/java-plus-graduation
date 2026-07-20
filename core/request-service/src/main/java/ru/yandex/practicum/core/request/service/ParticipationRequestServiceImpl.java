@@ -48,6 +48,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         if (event.getParticipantLimit() == 0 || Boolean.FALSE.equals(event.getRequestModeration())) {
             request.setStatus(RequestStatus.CONFIRMED);
+        } else {
+            request.setStatus(RequestStatus.PENDING);
         }
 
         return requestMapper.toRequestDto(requestRepository.save(request));
@@ -171,7 +173,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Long currentConfirmedRequests =
                 requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
 
-        if (Objects.equals(userId, event.getInitiator().getId())) {
+        if (event.getInitiator() != null &&
+                Objects.equals(userId, event.getInitiator().getId())) {
             throw new ConflictException(
                     "Инициатор события не может подать заявку на участие в собственном событии"
             );
@@ -182,7 +185,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     "Нельзя участвовать в неопубликованном событии. Текущий статус: " + event.getState());
         }
 
-        if (eventParticipationLimit > 0 && currentConfirmedRequests >= eventParticipationLimit) {
+        if (eventParticipationLimit != null && eventParticipationLimit > 0 &&
+                currentConfirmedRequests >= eventParticipationLimit) {
             throw new ConflictException(
                     String.format("Лимит участников в событии исчерпан. Лимит: %d, Текущее количество: %d",
                             event.getParticipantLimit(), currentConfirmedRequests));
