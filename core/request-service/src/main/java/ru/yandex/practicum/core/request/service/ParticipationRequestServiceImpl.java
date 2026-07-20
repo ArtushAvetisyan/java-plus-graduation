@@ -64,6 +64,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             throw new ConflictException("Только создатель заявки может отменить запрос");
         }
 
+        if (RequestStatus.CONFIRMED.equals(request.getStatus())) {
+            throw new ConflictException("Нельзя отменить уже подтверждённую заявку");
+        }
+
         request.setStatus(RequestStatus.CANCELED);
         requestRepository.save(request);
         return requestMapper.toRequestDto(request);
@@ -73,6 +77,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     public EventRequestStatusUpdateResult updateRequestStatus(Long eventId, Integer participantLimit, Boolean requestModeration,
                                                               EventRequestStatusUpdateRequest updateRequest) {
+        int limit = (participantLimit != null) ? participantLimit : 0;
+
         List<ParticipationRequest> requests = requestRepository.findAllById(updateRequest.getRequestIds());
         for (ParticipationRequest request : requests) {
             if (!request.getStatus().equals(RequestStatus.PENDING)) {
@@ -90,11 +96,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             }
         } else if (updateRequest.getStatus() == RequestStatus.CONFIRMED) {
             long currentConfirmedCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-            if (participantLimit > 0 && currentConfirmedCount >= participantLimit) {
+
+            if (limit > 0 && currentConfirmedCount >= limit) {
                 throw new ConflictException("Лимит участников для данного события уже исчерпан");
             }
+
             for (ParticipationRequest request : requests) {
-                if (participantLimit == 0 || currentConfirmedCount < participantLimit) {
+                if (limit == 0 || currentConfirmedCount < limit) {
                     request.setStatus(RequestStatus.CONFIRMED);
                     confirmedList.add(request);
                     currentConfirmedCount++;
@@ -155,6 +163,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     private void validateRequest(EventFullDto event, Long userId) {
+        if (requestRepository.existsByRequesterIdAndEventId(userId, event.getId())) {
+            throw new ConflictException("Заявка на участие в этом событии уже подана");
+        }
+
         Integer eventParticipationLimit = event.getParticipantLimit();
         Long currentConfirmedRequests =
                 requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);

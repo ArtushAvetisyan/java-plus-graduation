@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ErrorDetail {
+
     private String type;
     private List<String> stackTrace;
 }
