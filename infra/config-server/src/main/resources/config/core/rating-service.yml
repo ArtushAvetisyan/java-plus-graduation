@@ -1,5 +1,5 @@
 server:
-  port: 9090
+  port: 0
 
 spring:
   datasource:
@@ -11,10 +11,3 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
-  jackson:
-    date-format: "yyyy-MM-dd HH:mm:ss"
-
-  mvc:
-    format:
-      date-time: "yyyy-MM-dd HH:mm:ss"

@@ -13,6 +13,17 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>main-service</module>
+        <module>user-service</module>
+        <module>event-service</module>
+        <module>request-service</module>
+        <module>interaction-api</module>
+        <module>rating-service</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
 </project>
