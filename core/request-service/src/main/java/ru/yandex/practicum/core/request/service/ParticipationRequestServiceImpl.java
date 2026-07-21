@@ -180,8 +180,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (event.getInitiator() != null &&
                 Objects.equals(userId, event.getInitiator().getId())) {
             throw new ConflictException(
-                    "Инициатор события не может подать заявку на участие в собственном событии"
-            );
+                    "Инициатор события не может подать заявку на участие в собственном событии");
         }
 
         if (!EventState.PUBLISHED.equals(event.getState())) {

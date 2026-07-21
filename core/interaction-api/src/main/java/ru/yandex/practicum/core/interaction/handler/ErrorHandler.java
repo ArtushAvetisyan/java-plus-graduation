@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -20,6 +21,7 @@ import ru.yandex.practicum.core.interaction.handler.exception.BadRequestExceptio
 import ru.yandex.practicum.core.interaction.handler.exception.ConflictException;
 import ru.yandex.practicum.core.interaction.handler.exception.NotFoundException;
 
+import java.lang.reflect.UndeclaredThrowableException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,35 +33,50 @@ public class ErrorHandler {
 
     private static final Integer MAX_STACKTRACE_LENGTH = 10;
 
-    @ExceptionHandler({MethodArgumentNotValidException.class,
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
             MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class,
             HttpMessageNotReadableException.class,
             IllegalArgumentException.class,
             HandlerMethodValidationException.class,
             ConstraintViolationException.class,
-            BadRequestException.class})
+            BadRequestException.class
+    })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleBadRequestException(final Exception e) {
         return handleException(e, HttpStatus.BAD_REQUEST, "Неправильно составленный запрос");
     }
 
-    @ExceptionHandler(Throwable.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleThrowable(final Throwable e) {
-        return handleException(e, HttpStatus.INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
-    }
-
     @ExceptionHandler({NotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handeNotFoundException(final RuntimeException e) {
+    public ApiError handleNotFoundException(final RuntimeException e) {
         return handleException(e, HttpStatus.NOT_FOUND, "Требуемый объект не найден");
     }
 
-    @ExceptionHandler({AlreadyExistsException.class, ConflictException.class})
+    @ExceptionHandler({
+            AlreadyExistsException.class,
+            ConflictException.class,
+            DataIntegrityViolationException.class
+    })
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConflictException(final RuntimeException e) {
+    public ApiError handleConflictException(final Exception e) {
         return handleException(e, HttpStatus.CONFLICT, "Нарушено ограничение целостности");
+    }
+
+    @ExceptionHandler(UndeclaredThrowableException.class)
+    public ResponseEntity<ApiError> handleUndeclaredThrowable(final UndeclaredThrowableException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ConflictException) {
+            return new ResponseEntity<>(handleConflictException((ConflictException) cause), HttpStatus.CONFLICT);
+        }
+        if (cause instanceof NotFoundException) {
+            return new ResponseEntity<>(handleNotFoundException((NotFoundException) cause), HttpStatus.NOT_FOUND);
+        }
+        if (cause instanceof BadRequestException) {
+            return new ResponseEntity<>(handleBadRequestException((BadRequestException) cause), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(handleThrowable(e), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(FeignException.class)
@@ -68,7 +85,18 @@ public class ErrorHandler {
         if (status == null) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        ApiError apiError = handleException(e, status, "Ошибка при межсервисном взаимодействии");
+
+        String message = (e.responseBody().isPresent() && !e.contentUTF8().isBlank())
+                ? e.contentUTF8()
+                : e.getMessage();
+
+        ApiError apiError = ApiError.builder()
+                .status(status)
+                .message(message)
+                .reason("Ошибка при межсервисном взаимодействии")
+                .timestamp(LocalDateTime.now())
+                .build();
+
         return new ResponseEntity<>(apiError, status);
     }
 
@@ -78,11 +106,16 @@ public class ErrorHandler {
         return handleException(e, HttpStatus.SERVICE_UNAVAILABLE, "Сервис временно недоступен");
     }
 
+    @ExceptionHandler(Throwable.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiError handleThrowable(final Throwable e) {
+        return handleException(e, HttpStatus.INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
+    }
+
     private ApiError handleException(final Throwable e, final HttpStatus status, @Nullable String reason) {
         log.warn("{} {}", status.value(), e.getMessage(), e);
 
         List<ErrorDetail> errors = new ArrayList<>();
-
         List<String> stackTrace = getStackTrace(e);
 
         ErrorDetail errorDetail = ErrorDetail.builder()
