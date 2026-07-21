@@ -77,13 +77,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     @Transactional
-    public EventRequestStatusUpdateResult updateRequestStatus(Long eventId, Integer participantLimit, Boolean requestModeration,
+    public EventRequestStatusUpdateResult updateRequestStatus(Long eventId,
+                                                              Integer participantLimit,
+                                                              Boolean requestModeration,
                                                               EventRequestStatusUpdateRequest updateRequest) {
         if (updateRequest.getRequestIds() == null || updateRequest.getRequestIds().isEmpty()) {
             return new EventRequestStatusUpdateResult(List.of(), List.of());
         }
-
-        int limit = (participantLimit != null) ? participantLimit : 0;
 
         List<ParticipationRequest> requests = requestRepository.findAllById(updateRequest.getRequestIds());
         for (ParticipationRequest request : requests) {
@@ -94,6 +94,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         List<ParticipationRequest> confirmedList = new ArrayList<>();
         List<ParticipationRequest> rejectedList = new ArrayList<>();
+
+        int limit = (participantLimit != null) ? participantLimit : 0;
+        boolean moderation = (requestModeration != null) && requestModeration;
 
         if (updateRequest.getStatus() == RequestStatus.REJECTED) {
             for (ParticipationRequest request : requests) {
@@ -108,7 +111,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             }
 
             for (ParticipationRequest request : requests) {
-                if (limit == 0 || currentConfirmedCount < limit) {
+                if (limit == 0 || !moderation || currentConfirmedCount < limit) {
                     request.setStatus(RequestStatus.CONFIRMED);
                     confirmedList.add(request);
                     currentConfirmedCount++;

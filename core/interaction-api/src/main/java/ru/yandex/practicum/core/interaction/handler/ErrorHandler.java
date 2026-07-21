@@ -67,6 +67,9 @@ public class ErrorHandler {
     @ExceptionHandler(UndeclaredThrowableException.class)
     public ResponseEntity<ApiError> handleUndeclaredThrowable(final UndeclaredThrowableException e) {
         Throwable cause = e.getCause();
+        if (cause instanceof FeignException) {
+            return handleFeignException((FeignException) cause);
+        }
         if (cause instanceof ConflictException) {
             return new ResponseEntity<>(handleConflictException((ConflictException) cause), HttpStatus.CONFLICT);
         }

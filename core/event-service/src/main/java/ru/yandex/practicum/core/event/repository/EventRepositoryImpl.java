@@ -14,6 +14,7 @@ import ru.yandex.practicum.core.interaction.dto.event.EventSearchFilterPublic;
 import ru.yandex.practicum.core.interaction.dto.event.EventState;
 import ru.yandex.practicum.core.interaction.dto.event.PublicEventSort;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,9 +83,11 @@ public class EventRepositoryImpl implements EventQuerydslRepository {
         if (filter.rangeStart() != null) {
             where.and(e.eventDate.goe(filter.rangeStart()));
         }
-
         if (filter.rangeEnd() != null) {
             where.and(e.eventDate.loe(filter.rangeEnd()));
+        }
+        if (filter.rangeStart() == null && filter.rangeEnd() == null) {
+            where.and(e.eventDate.goe(LocalDateTime.now()));
         }
 
         List<OrderSpecifier<?>> orderSpecifiers = orderSpecifiersFrom(pageable.getSort(), e);

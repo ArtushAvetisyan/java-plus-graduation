@@ -30,10 +30,7 @@ import ru.yandex.practicum.core.interaction.handler.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -199,9 +196,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> getEventsByAdmin(EventSearchFilterAdmin filter,
-                                               Integer from,
-                                               Integer size) {
+    public List<EventFullDto> getEventsByAdmin(EventSearchFilterAdmin filter, Integer from, Integer size) {
+        if (filter.rangeStart() != null &&
+                filter.rangeEnd() != null && filter.rangeStart().isAfter(filter.rangeEnd())) {
+            throw new BadRequestException("Дата начала rangeStart не может быть позже даты окончания rangeEnd");
+        }
+
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
@@ -275,6 +275,10 @@ public class EventServiceImpl implements EventService {
                                                Integer from,
                                                Integer size,
                                                HttpServletRequest request) {
+        if (filter.rangeStart() != null && filter.rangeEnd() != null
+                && filter.rangeStart().isAfter(filter.rangeEnd())) {
+            throw new BadRequestException("Дата начала rangeStart не может быть позже даты окончания rangeEnd");
+        }
 
         statsClient.hit(new HitRequestDto("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(),
                 LocalDateTime.now()));
@@ -283,8 +287,34 @@ public class EventServiceImpl implements EventService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         List<Event> events = eventRepository.searchPublic(filter, pageable);
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        return enrichShortDto(events);
+        List<EventShortDto> dtos = enrichShortDto(events);
+
+        if (Boolean.TRUE.equals(filter.onlyAvailable())) {
+            dtos = dtos.stream()
+                    .filter(dto -> {
+                        Event event = events.stream()
+                                .filter(e -> e.getId().equals(dto.getId()))
+                                .findFirst()
+                                .orElse(null);
+                        if (event == null || event.getParticipantLimit() == 0) {
+                            return true;
+                        }
+                        return dto.getConfirmedRequests() < event.getParticipantLimit();
+                    })
+                    .toList();
+        }
+
+        if (filter.sort() == PublicEventSort.VIEWS) {
+            dtos = dtos.stream()
+                    .sorted(Comparator.comparingLong((EventShortDto dto) -> dto.getViews() != null ? dto.getViews() : 0L).reversed())
+                    .toList();
+        }
+
+        return dtos;
     }
 
     @Override
@@ -384,7 +414,6 @@ public class EventServiceImpl implements EventService {
 
         String start = earliestDateTime.format(FORMATTER);
         String end = LocalDateTime.now().format(FORMATTER);
-
 
         try {
             List<StatsViewDto> stats = statsClient.getStats(start, end, uris, true);
