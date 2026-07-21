@@ -2,7 +2,8 @@ package ru.yandex.practicum.core.event.controller.category;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.core.event.service.category.CategoryService;
 import ru.yandex.practicum.core.interaction.dto.category.CategoryFilter;
@@ -12,13 +13,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/categories")
-@AllArgsConstructor
+@RequiredArgsConstructor
+@Validated
 public class PublicCategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<CategoryResponse> getNeededCategories(@RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
-                                                      @RequestParam(defaultValue = "10") @Positive Integer size) {
+    public List<CategoryResponse> getNeededCategories(
+            @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
         CategoryFilter categoryFilter = new CategoryFilter(from, size);
         return categoryService.getNeeded(categoryFilter);
     }

@@ -3,6 +3,7 @@ package ru.yandex.practicum.core.request.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.core.interaction.dto.requests.EventRequestStatusUpdateRequest;
 import ru.yandex.practicum.core.interaction.dto.requests.EventRequestStatusUpdateResult;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Validated
 public class ParticipationRequestController {
 
     private final ParticipationRequestService requestService;

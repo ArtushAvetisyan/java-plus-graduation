@@ -4,6 +4,7 @@ package ru.yandex.practicum.core.event.controller.compilation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.core.event.service.compilation.CompilationService;
 import ru.yandex.practicum.core.interaction.dto.compilation.CompilationRequest;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.core.interaction.dto.compilation.UpdateCompilationReq
 @RestController
 @RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
+@Validated
 public class AdminCompilationController {
     private final CompilationService compilationService;
 

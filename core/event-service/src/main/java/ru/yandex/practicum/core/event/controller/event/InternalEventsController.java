@@ -1,7 +1,9 @@
 package ru.yandex.practicum.core.event.controller.event;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,23 +16,24 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping()
+@RequestMapping
+@Validated
 public class InternalEventsController {
 
     private final EventService eventService;
 
     @PostMapping("/internal/events")
-    public List<EventFullDto> getFullEventsByEventIds(@RequestBody @NotEmpty List<Long> eventIds) {
+    public List<EventFullDto> getFullEventsByEventIds(@Valid @RequestBody @NotEmpty List<Long> eventIds) {
         return eventService.getEventsByIds(eventIds);
     }
 
     @PostMapping("/internal/events/short")
-    List<EventShortDto> getShortEventsByEventIds(@RequestBody @NotEmpty List<Long> eventIds) {
+    public List<EventShortDto> getShortEventsByEventIds(@Valid @RequestBody @NotEmpty List<Long> eventIds) {
         return eventService.getShortEventsByIds(eventIds);
     }
 
     @PostMapping("/internal/events/short/by-initiator")
-    List<EventShortDto> getShortEventsByInitiatorIds(@RequestBody @NotEmpty List<Long> userIds) {
+    public List<EventShortDto> getShortEventsByInitiatorIds(@Valid @RequestBody @NotEmpty List<Long> userIds) {
         return eventService.getShortEventsByInitiatorIds(userIds);
     }
 }

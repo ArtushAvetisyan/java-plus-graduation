@@ -18,7 +18,7 @@ public class InternalRequestController {
     private final ParticipationRequestService requestService;
 
     @PostMapping("/requests/count")
-    public Map<Long, Long> getConfirmedRequestsCounts(@Valid @RequestBody @NotEmpty() List<Long> eventIds) {
+    public Map<Long, Long> getConfirmedRequestsCounts(@Valid @RequestBody @NotEmpty List<Long> eventIds) {
         return requestService.getConfirmedRequestsCounts(eventIds);
     }
 

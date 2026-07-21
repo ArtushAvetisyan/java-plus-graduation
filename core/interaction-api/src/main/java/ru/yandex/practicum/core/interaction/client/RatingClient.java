@@ -9,7 +9,6 @@ import java.util.Map;
 @FeignClient(name = "rating-service")
 public interface RatingClient {
 
-    // Internal API
     @PostMapping("/internal/events/ratings")
     Map<Long, Long> getRatingsForEvents(@RequestBody List<Long> eventIds);
 

@@ -14,7 +14,6 @@ import java.util.Map;
 @FeignClient(name = "request-service")
 public interface RequestEventClient {
 
-    // ParticipationRequest API
     @GetMapping("/users/events/{eventId}/requests")
     List<ParticipationRequestDto> getRequestsByEvent(@PathVariable("eventId") Long eventId);
 
@@ -24,7 +23,6 @@ public interface RequestEventClient {
                                                        @RequestParam("requestModeration") Boolean requestModeration,
                                                        @Valid @RequestBody EventRequestStatusUpdateRequest updateRequest);
 
-    //Internal API
     @PostMapping("/internal/events/requests/count")
     Map<Long, Long> getConfirmedRequestsCounts(@Valid @RequestBody @NotEmpty() List<Long> eventIds);
 

@@ -13,11 +13,9 @@ import java.util.List;
 @FeignClient(name = "user-service")
 public interface UserClient {
 
-    // Admin API
     @GetMapping("/admin/users/{userId}")
     UserShortDto getUserById(@PathVariable(value = "userId") Long userId);
 
-    // Internal API
     @PostMapping("/internal/users")
     List<UserShortDto> getUsersByIds(@Valid @RequestBody List<Long> ids);
 }

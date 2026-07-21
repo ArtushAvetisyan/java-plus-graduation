@@ -14,11 +14,9 @@ import java.util.List;
 @FeignClient(name = "event-service")
 public interface EventClient {
 
-    // Public API
     @GetMapping("/events/{id}")
     EventFullDto getEventPublicById(@PathVariable("id") Long id);
 
-    // Internal API
     @PostMapping("/internal/events")
     List<EventFullDto> getFullEventsByEventIds(@RequestBody @NotEmpty List<Long> eventIds);
 

@@ -53,19 +53,19 @@ public class EventSpecification {
                 predicates.add(root.get("category").get("id").in(filter.categories()));
             }
 
+            if (filter.users() != null && !filter.users().isEmpty()) {
+                predicates.add(root.get("initiatorId").in(filter.users()));
+            }
+
             if (filter.paid() != null) {
                 predicates.add(cb.equal(root.get("paid"), filter.paid()));
             }
 
-            if (filter.rangeStart() == null && filter.rangeEnd() == null) {
-                predicates.add(cb.greaterThan(root.get("eventDate"), java.time.LocalDateTime.now()));
-            } else {
-                if (filter.rangeStart() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), filter.rangeStart()));
-                }
-                if (filter.rangeEnd() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), filter.rangeEnd()));
-                }
+            if (filter.rangeStart() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), filter.rangeStart()));
+            }
+            if (filter.rangeEnd() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), filter.rangeEnd()));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
