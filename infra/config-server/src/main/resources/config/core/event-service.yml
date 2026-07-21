@@ -15,6 +15,12 @@ spring:
 stats-server:
   id: "stats-server"
 
+  cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: true
+
 resilience4j.circuitbreaker:
   configs:
     default:

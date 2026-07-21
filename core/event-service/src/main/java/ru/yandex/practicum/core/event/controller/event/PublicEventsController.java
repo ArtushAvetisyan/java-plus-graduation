@@ -1,7 +1,6 @@
 package ru.yandex.practicum.core.event.controller.event;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -26,8 +25,8 @@ public class PublicEventsController {
     @GetMapping
     public List<EventShortDto> getEventsPublic(
             @RequestParam(name = "text", required = false) String text,
-            @RequestParam(name = "categories", required = false) List<@Positive Long> categories,
-            @RequestParam(name = "users", required = false) List<@Positive Long> users,
+            @RequestParam(name = "categories", required = false) List<Long> categories,
+            @RequestParam(name = "users", required = false) List<Long> users,
             @RequestParam(name = "paid", required = false) Boolean paid,
             @RequestParam(name = "rangeStart", required = false) LocalDateTime rangeStart,
             @RequestParam(name = "rangeEnd", required = false) LocalDateTime rangeEnd,

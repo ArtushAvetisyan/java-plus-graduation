@@ -75,6 +75,11 @@
             <artifactId>mapstruct</artifactId>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-hc5</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

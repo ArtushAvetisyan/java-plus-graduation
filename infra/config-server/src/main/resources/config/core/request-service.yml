@@ -12,6 +12,12 @@ spring:
     hibernate:
       ddl-auto: update
 
+  cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: true
+
 resilience4j.circuitbreaker:
   configs:
     default:
