@@ -79,6 +79,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     public EventRequestStatusUpdateResult updateRequestStatus(Long eventId, Integer participantLimit, Boolean requestModeration,
                                                               EventRequestStatusUpdateRequest updateRequest) {
+        if (updateRequest.getRequestIds() == null || updateRequest.getRequestIds().isEmpty()) {
+            return new EventRequestStatusUpdateResult(List.of(), List.of());
+        }
+
         int limit = (participantLimit != null) ? participantLimit : 0;
 
         List<ParticipationRequest> requests = requestRepository.findAllById(updateRequest.getRequestIds());

@@ -279,16 +279,52 @@ public class EventServiceImpl implements EventService {
                                                Integer size,
                                                HttpServletRequest request) {
 
+        if (filter.rangeStart() != null && filter.rangeEnd() != null
+                && filter.rangeStart().isAfter(filter.rangeEnd())) {
+            throw new BadRequestException("Дата начала не может быть позже даты окончания");
+        }
+
         statsClient.hit(new HitRequestDto("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(),
                 LocalDateTime.now()));
 
         int page = from / size;
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Sort sort = Sort.by("id").ascending();
+        if (filter.sort() != null && filter.sort() == PublicEventSort.EVENT_DATE) {
+            sort = Sort.by("eventDate").ascending();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Specification<Event> specification = EventSpecification.byPublicFilter(filter);
         List<Event> events = eventRepository.findAll(specification, pageable).getContent();
 
-        return enrichShortDto(events);
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (Boolean.TRUE.equals(filter.onlyAvailable())) {
+            List<Long> eventIds = events.stream().map(Event::getId).toList();
+            Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
+
+            events = events.stream()
+                    .filter(event -> {
+                        if (event.getParticipantLimit() == 0) {
+                            return true;
+                        }
+                        Long confirmed = confirmedRequestsMap.getOrDefault(event.getId(), 0L);
+                        return confirmed < event.getParticipantLimit();
+                    })
+                    .toList();
+        }
+
+        List<EventShortDto> dtos = enrichShortDto(events);
+        if (filter.sort() != null && filter.sort() == PublicEventSort.VIEWS) {
+            dtos = dtos.stream()
+                    .sorted((e1, e2) -> Long.compare(e2.getViews(), e1.getViews()))
+                    .toList();
+        }
+
+        return dtos;
     }
 
     @Override

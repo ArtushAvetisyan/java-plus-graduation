@@ -7,6 +7,7 @@ import ru.yandex.practicum.core.interaction.dto.event.EventSearchFilterAdmin;
 import ru.yandex.practicum.core.interaction.dto.event.EventSearchFilterPublic;
 import ru.yandex.practicum.core.interaction.dto.event.EventState;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,11 +62,15 @@ public class EventSpecification {
                 predicates.add(cb.equal(root.get("paid"), filter.paid()));
             }
 
-            if (filter.rangeStart() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), filter.rangeStart()));
-            }
-            if (filter.rangeEnd() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), filter.rangeEnd()));
+            if (filter.rangeStart() == null && filter.rangeEnd() == null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), LocalDateTime.now()));
+            } else {
+                if (filter.rangeStart() != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), filter.rangeStart()));
+                }
+                if (filter.rangeEnd() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), filter.rangeEnd()));
+                }
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
