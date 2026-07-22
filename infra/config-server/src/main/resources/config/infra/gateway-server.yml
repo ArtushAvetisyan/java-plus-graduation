@@ -9,74 +9,77 @@ spring:
           enabled: false
 
       routes:
+        # EVENT SERVICE
         - id: admin-categories-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/admin/categories/**
-            - Method=POST,DELETE,PATCH
+            - Path=/admin/categories, /admin/categories/**
 
         - id: public-categories-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/categories/**
-            - Method=GET
+            - Path=/categories, /categories/**
 
         - id: admin-compilations-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/admin/compilations/**
-            - Method=POST,PATCH,DELETE
+            - Path=/admin/compilations, /admin/compilations/**
 
         - id: public-compilations-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/compilations/**
-            - Method=GET
+            - Path=/compilations, /compilations/**
 
         - id: admin-events-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/admin/events/**
-            - Method=GET,PATCH
+            - Path=/admin/events, /admin/events/**
 
         - id: public-events-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/events/**
-            - Method=GET
-
-        - id: user-requests-route
-          uri: lb://main-service
-          predicates:
-            - Path=/users/*/requests/**
-            - Method=GET,POST,PATCH
+            - Path=/events, /events/**
 
         - id: private-events-route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
-            - Path=/users/**
-            - Method=GET,POST,PATCH
+            - Path=/users/*/events/**
 
+        # REQUEST SERVICE
+        - id: user-requests-route
+          uri: lb://request-service
+          predicates:
+            - Path=/users/*/requests/**
+
+        # USER SERVICE
+        - id: admin-users-route
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users, /admin/users/**
+
+        # RATING SERVICE
         - id: admin-ratings-route
-          uri: lb://main-service
+          uri: lb://rating-service
           predicates:
             - Path=/v1/admin/ratings/**
-            - Method=GET
 
         - id: public-ratings-route
-          uri: lb://main-service
+          uri: lb://rating-service
           predicates:
             - Path=/v1/ratings
-            - Method=GET
 
         - id: private-ratings-route
-          uri: lb://main-service
+          uri: lb://rating-service
           predicates:
             - Path=/v1/*/ratings/**
-            - Method=GET,POST,DELETE
 
-        - id: admin-users-route
-          uri: lb://main-service
+        # STAT SERVICE
+        - id: stat-hit-route
+          uri: lb://stats-server
           predicates:
-            - Path=/admin/users/**
-            - Method=POST,GET,DELETE
+            - Path=/hit
+
+        - id: stat-stats-route
+          uri: lb://stats-server
+          predicates:
+            - Path=/stats

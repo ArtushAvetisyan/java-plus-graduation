@@ -1,0 +1,33 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: admin
+    password: admin
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+stats-server:
+  id: "stats-server"
+
+  cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: true
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 10
+      minimumNumberOfCalls: 5
+      failureRateThreshold: 50
+      ignoreExceptions:
+        - ru.yandex.practicum.core.interaction.handler.exception.ConflictException
+        - ru.yandex.practicum.core.interaction.handler.exception.NotFoundException
+        - ru.yandex.practicum.core.interaction.handler.exception.BadRequestException
