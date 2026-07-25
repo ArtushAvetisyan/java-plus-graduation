@@ -1,6 +1,5 @@
 package ru.yandex.practicum.core.event.controller.event;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -33,15 +32,27 @@ public class PublicEventsController {
             @RequestParam(name = "onlyAvailable", defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(name = "sort", required = false) PublicEventSort sort,
             @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
-            @RequestParam(name = "size", defaultValue = "10") @PositiveOrZero Integer size,
-            HttpServletRequest request) {
+            @RequestParam(name = "size", defaultValue = "10") @PositiveOrZero Integer size) {
         EventSearchFilterPublic filter = new EventSearchFilterPublic(text, categories, users, paid, rangeStart,
                 rangeEnd, onlyAvailable, sort);
-        return eventService.getEventsPublic(filter, from, size, request);
+        return eventService.getEventsPublic(filter, from, size);
     }
 
     @GetMapping("/{id}")
-    public EventFullDto getEventPublicById(@PathVariable("id") Long id, HttpServletRequest request) {
-        return eventService.getPublicEventById(id, request);
+    public EventFullDto getEventPublicById(@RequestHeader(value = "X-EWM-USER-ID", required = false) Long userId,
+                                           @PathVariable("id") Long id) {
+        return eventService.getPublicEventById(id, userId);
+    }
+
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getEventRecommendations(@RequestHeader(name = "X-EWM-USER-ID") Long userId,
+                                                       @RequestParam(name = "size", required = false) Integer size) {
+        return eventService.getEventRecommendations(userId, size);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void addLike(@RequestHeader(name = "X-EWM-USER-ID") Long userId,
+                        @PathVariable("eventId") Long eventId) {
+        eventService.addLike(userId, eventId);
     }
 }

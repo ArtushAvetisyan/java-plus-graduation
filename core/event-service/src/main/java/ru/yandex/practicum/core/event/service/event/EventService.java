@@ -1,6 +1,5 @@
 package ru.yandex.practicum.core.event.service.event;
 
-import jakarta.servlet.http.HttpServletRequest;
 import ru.yandex.practicum.core.interaction.dto.event.*;
 import ru.yandex.practicum.core.interaction.dto.requests.EventRequestStatusUpdateRequest;
 import ru.yandex.practicum.core.interaction.dto.requests.EventRequestStatusUpdateResult;
@@ -29,10 +28,9 @@ public interface EventService {
 
     List<EventShortDto> getEventsPublic(EventSearchFilterPublic filter,
                                         Integer from,
-                                        Integer size,
-                                        HttpServletRequest request);
+                                        Integer size);
 
-    EventFullDto getPublicEventById(Long eventId, HttpServletRequest request);
+    EventFullDto getPublicEventById(Long eventId, Long userId);
 
     List<EventFullDto> getFavoriteEvents(Long userId);
 
@@ -43,4 +41,8 @@ public interface EventService {
     List<EventShortDto> getShortEventsByIds(List<Long> eventIds);
 
     List<EventShortDto> getShortEventsByInitiatorIds(List<Long> userIds);
+
+    List<EventShortDto> getEventRecommendations(Long userId, Integer size);
+
+    void addLike(Long userId, Long eventId);
 }

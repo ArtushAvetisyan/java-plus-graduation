@@ -34,6 +34,9 @@ public class Event {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Column(name = "rating")
+    private Double rating;
+
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 

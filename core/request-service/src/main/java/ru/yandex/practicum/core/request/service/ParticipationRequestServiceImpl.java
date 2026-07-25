@@ -1,8 +1,11 @@
 package ru.yandex.practicum.core.request.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.CollectorClient;
+import ru.practicum.ewm.stats.proto.collector.ActionTypeProto;
 import ru.yandex.practicum.core.interaction.client.EventClient;
 import ru.yandex.practicum.core.interaction.client.UserClient;
 import ru.yandex.practicum.core.interaction.dto.event.EventFullDto;
@@ -18,28 +21,34 @@ import ru.yandex.practicum.core.request.model.ParticipationRequest;
 import ru.yandex.practicum.core.request.repository.ParticipationRequestRepository;
 import ru.yandex.practicum.core.request.repository.RequestCountProjection;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
+    private static final int DEFAULT_MAX_RESULTS_SIZE = 10;
 
     private final ParticipationRequestRepository requestRepository;
     private final ParticipationRequestMapper requestMapper;
+    private final CollectorClient collectorClient;
     private final EventClient eventClient;
     private final UserClient userClient;
 
     @Override
     @Transactional
-    public ParticipationRequestDto addParticipationRequest(Long userId, Long eventId) {
+    public ParticipationRequestDto addParticipationRequest(Long userId, Long eventId, Integer size) {
         userClient.getUserById(userId);
+        int maxResults = size != null ? size : DEFAULT_MAX_RESULTS_SIZE;
 
         List<EventFullDto> events = eventClient.getFullEventsByEventIds(List.of(eventId));
         if (events.isEmpty()) {
             throw new NotFoundException("Событие с id - " + eventId + " не найдено");
         }
+
         EventFullDto event = events.getFirst();
 
         validateRequest(event, userId);
@@ -50,6 +59,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             request.setStatus(RequestStatus.CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);
+        }
+
+        try {
+            Instant timestamp = Instant.now();
+            collectorClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER, timestamp);
+        } catch (Exception exception) {
+            log.error("Ошибка при отправке действия пользователя: {}", exception.getMessage());
         }
 
         return requestMapper.toRequestDto(requestRepository.save(request));

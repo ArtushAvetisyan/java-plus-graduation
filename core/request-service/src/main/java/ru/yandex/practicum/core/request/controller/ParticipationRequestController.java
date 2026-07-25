@@ -23,8 +23,9 @@ public class ParticipationRequestController {
     @PostMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto addParticipationRequest(@PathVariable("userId") Long userId,
-                                                           @RequestParam("eventId") Long eventId) {
-        return requestService.addParticipationRequest(userId, eventId);
+                                                           @RequestParam("eventId") Long eventId,
+                                                           @RequestParam(name = "size", required = false) Integer size) {
+        return requestService.addParticipationRequest(userId, eventId, size);
     }
 
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
