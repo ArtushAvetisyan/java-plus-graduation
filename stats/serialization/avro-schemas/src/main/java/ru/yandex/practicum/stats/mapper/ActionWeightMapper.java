@@ -1,4 +1,4 @@
-package ru.yandex.practicum.stats.aggregator.mapper;
+package ru.yandex.practicum.stats.mapper;
 
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 

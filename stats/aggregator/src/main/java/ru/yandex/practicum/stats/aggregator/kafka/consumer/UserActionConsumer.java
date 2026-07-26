@@ -14,14 +14,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class UserActionListener {
+public class UserActionConsumer {
 
     private final EventSimilarityProducer similarityProducer;
     private final AggregatorService aggregatorService;
 
     @KafkaListener(topics = "#{topics.userActionsTopic}")
     public void listen(UserActionAvro action) {
-        log.info("Получено действие пользователя: ID пользователя - {}, ID события - {}, тип события - {}",
+        log.info("Получено действие пользователя (aggregator): ID пользователя - {}, ID события - {}, тип события - {}",
                 action.getUserId(), action.getEventId(), action.getActionType());
 
         List<EventSimilarityAvro> updatedSimilarities = aggregatorService.processUserAction(action);

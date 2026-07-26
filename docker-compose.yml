@@ -60,16 +60,14 @@ services:
       - kafka
     entrypoint: [ '/bin/sh', '-c' ]
     command: |
-      "
-      # Ожидание готовности Kafka
-      kafka-topics --bootstrap-server kafka:29092 --list
+      # Ожидание полной готовности Kafka
+      cub kafka-ready -b kafka:29092 1 30
       
       echo 'Создание топиков ...'
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.user-actions.v1 --partitions 1 --replication-factor 1
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.events-similarity.v1 --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.user-actions.v1 --partitions 3 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.events-similarity.v1 --partitions 3 --replication-factor 1
       
       echo 'Топики успешно созданы!'
-      "
 
   # Сервис обнаружения (Discovery Server)
   discovery-server:
@@ -99,6 +97,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     depends_on:
       - discovery-server
+      - config-server
 
   # Core Микросервисы
   user-service:
@@ -114,6 +113,8 @@ services:
       ewm-db:
         condition: service_healthy
       discovery-server:
+        condition: service_started
+      config-server:
         condition: service_started
     restart: on-failure
 
@@ -131,6 +132,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      config-server:
+        condition: service_started
     restart: on-failure
 
   request-service:
@@ -146,6 +149,8 @@ services:
       ewm-db:
         condition: service_healthy
       discovery-server:
+        condition: service_started
+      config-server:
         condition: service_started
     restart: on-failure
 
@@ -163,6 +168,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      config-server:
+        condition: service_started
     restart: on-failure
 
   # Микросервисы рекомендательной системы
@@ -177,6 +184,7 @@ services:
     depends_on:
       - kafka
       - discovery-server
+      - config-server
     restart: on-failure
 
   aggregator-service:
@@ -189,6 +197,7 @@ services:
     depends_on:
       - kafka
       - discovery-server
+      - config-server
     restart: on-failure
 
   analyzer-service:
@@ -208,5 +217,7 @@ services:
       kafka:
         condition: service_started
       discovery-server:
+        condition: service_started
+      config-server:
         condition: service_started
     restart: on-failure

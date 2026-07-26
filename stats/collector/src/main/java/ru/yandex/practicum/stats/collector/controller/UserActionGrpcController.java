@@ -35,8 +35,7 @@ public class UserActionGrpcController extends UserActionControllerGrpc.UserActio
             response.onError(Status.INTERNAL
                     .withDescription("Не удалось обработать действие")
                     .withCause(exception)
-                    .asRuntimeException()
-            );
+                    .asRuntimeException());
         }
     }
 }

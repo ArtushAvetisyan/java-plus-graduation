@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.yandex.practicum.stats.aggregator.mapper.ActionWeightMapper;
+import ru.yandex.practicum.stats.mapper.ActionWeightMapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
