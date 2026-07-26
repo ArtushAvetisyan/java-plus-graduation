@@ -29,6 +29,7 @@ public class UserActionGrpcController extends UserActionControllerGrpc.UserActio
             producer.send(userActionAvro);
             response.onNext(Empty.getDefaultInstance());
             response.onCompleted();
+
         } catch (Exception exception) {
             log.error("Ошибка при обработке пользовательского действия: {}", exception.getMessage());
             response.onError(Status.INTERNAL
