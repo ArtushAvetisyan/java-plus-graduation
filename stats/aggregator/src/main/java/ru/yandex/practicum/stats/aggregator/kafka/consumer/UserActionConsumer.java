@@ -19,7 +19,9 @@ public class UserActionConsumer {
     private final EventSimilarityProducer similarityProducer;
     private final AggregatorService aggregatorService;
 
-    @KafkaListener(topics = "#{topics.userActionsTopic}")
+    @KafkaListener(
+            topics = "#{topics.userActionsTopic}",
+            concurrency = "${spring.kafka.listener.concurrency:3}")
     public void listen(UserActionAvro action) {
         log.info("Получено действие пользователя (aggregator): ID пользователя - {}, ID события - {}, тип события - {}",
                 action.getUserId(), action.getEventId(), action.getActionType());

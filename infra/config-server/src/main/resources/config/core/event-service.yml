@@ -18,9 +18,9 @@ grpc:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: admin
-    password: admin
+    url: jdbc:postgresql://localhost:5432/main
+    username: main
+    password: main
 
   jpa:
     hibernate:

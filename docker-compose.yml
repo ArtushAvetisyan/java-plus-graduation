@@ -1,5 +1,5 @@
 services:
-  # Базы данных
+  # 1. БАЗЫ ДАННЫХ И KAFKA
   stats-db:
     image: postgres:16.1
     container_name: stats-db
@@ -30,7 +30,6 @@ services:
       interval: 5s
       retries: 10
 
-  # Apache Kafka & Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -52,70 +51,100 @@ services:
     depends_on:
       - zookeeper
 
-  # Автоматическое создание Kafka-топиков
   kafka-init-topics:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka-init-topics
     depends_on:
       - kafka
-    entrypoint: [ '/bin/sh', '-c' ]
-    command: |
-      # Ожидание полной готовности Kafka
-      cub kafka-ready -b kafka:29092 1 30
-      
-      echo 'Создание топиков ...'
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.user-actions.v1 --partitions 3 --replication-factor 1
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.events-similarity.v1 --partitions 3 --replication-factor 1
-      
-      echo 'Топики успешно созданы!'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        cub kafka-ready -b kafka:29092 1 30
+        echo 'Создание топиков ...'
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.user-actions.v1 --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic stats.events-similarity.v1 --partitions 3 --replication-factor 1
+        echo 'Топики успешно созданы!'
 
-  # Сервис обнаружения (Discovery Server)
+  # 2. DISCOVERY SERVICE
   discovery-server:
     build: ./infra/discovery-server
     container_name: discovery-server
     ports:
       - "8761:8761"
+    environment:
+      SERVER_PORT: 8761
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      stats-db:
+        condition: service_healthy
+      ewm-db:
+        condition: service_healthy
+      kafka-init-topics:
+        condition: service_completed_successfully
 
-  # Сервис конфигурации (Config Server)
+  # 3. CONFIG SERVICE
   config-server:
     build: ./infra/config-server
     container_name: config-server
     environment:
       SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - discovery-server
+      discovery-server:
+        condition: service_healthy
     restart: on-failure
 
-  # API Gateway
-  gateway:
+  # 4. API GATEWAY
+  gateway-server:
     build: ./infra/gateway-server
     container_name: gateway-server
     ports:
       - "8080:8080"
     environment:
+      SERVER_PORT: 8080
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - discovery-server
-      - config-server
+      config-server:
+        condition: service_healthy
+    restart: on-failure
 
-  # Core Микросервисы
+  # 5. CORE МИКРОСЕРВИСЫ
   user-service:
     build: ./core/user-service
     container_name: user-service
     environment:
       SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
       SPRING_DATASOURCE_USERNAME: main
       SPRING_DATASOURCE_PASSWORD: main
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       ewm-db:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
-      config-server:
-        condition: service_started
+      gateway-server:
+        condition: service_healthy
     restart: on-failure
 
   event-service:
@@ -123,17 +152,21 @@ services:
     container_name: event-service
     environment:
       SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
       SPRING_DATASOURCE_USERNAME: main
       SPRING_DATASOURCE_PASSWORD: main
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       ewm-db:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
-      config-server:
-        condition: service_started
+      user-service:
+        condition: service_healthy
     restart: on-failure
 
   request-service:
@@ -141,17 +174,21 @@ services:
     container_name: request-service
     environment:
       SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
       SPRING_DATASOURCE_USERNAME: main
       SPRING_DATASOURCE_PASSWORD: main
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       ewm-db:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
-      config-server:
-        condition: service_started
+      event-service:
+        condition: service_healthy
     restart: on-failure
 
   rating-service:
@@ -159,53 +196,58 @@ services:
     container_name: rating-service
     environment:
       SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
       SPRING_DATASOURCE_USERNAME: main
       SPRING_DATASOURCE_PASSWORD: main
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       ewm-db:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
-      config-server:
-        condition: service_started
+      request-service:
+        condition: service_healthy
     restart: on-failure
 
-  # Микросервисы рекомендательной системы
-  collector-service:
+  # 6. МИКРОСЕРВИСЫ СТАТИСТИКИ
+  collector:
     build: ./stats/collector
     container_name: collector-service
     environment:
       SERVER_PORT: 0
       GRPC_SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     depends_on:
-      - kafka
-      - discovery-server
-      - config-server
+      rating-service:
+        condition: service_healthy
     restart: on-failure
 
-  aggregator-service:
+  aggregator:
     build: ./stats/aggregator
     container_name: aggregator-service
     environment:
       SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     depends_on:
-      - kafka
-      - discovery-server
-      - config-server
+      collector:
+        condition: service_started
     restart: on-failure
 
-  analyzer-service:
+  analyzer:
     build: ./stats/analyzer
     container_name: analyzer-service
     environment:
       SERVER_PORT: 0
       GRPC_SERVER_PORT: 0
+      MANAGEMENT_SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: stats
       SPRING_DATASOURCE_PASSWORD: stats
@@ -214,10 +256,6 @@ services:
     depends_on:
       stats-db:
         condition: service_healthy
-      kafka:
-        condition: service_started
-      discovery-server:
-        condition: service_started
-      config-server:
+      aggregator:
         condition: service_started
     restart: on-failure

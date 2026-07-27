@@ -8,9 +8,9 @@ grpc:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/
-    username:
-    password:
+    url: jdbc:postgresql://localhost:5432/stats
+    username: stats
+    password: stats
 
   jpa:
     hibernate:
@@ -21,6 +21,8 @@ spring:
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
+    listener:
+      concurrency: 3
 
 app:
   kafka:
@@ -32,6 +34,10 @@ app:
       user-actions: "analyzer-user-actions"
       events-similarity: "analyzer-events-similarity"
 
-    listener:
-      concurrency: 3
-      ack-mode: record
+    user-actions:
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: ru.yandex.practicum.stats.deserialization.UserActionDeserializer
+
+    events-similarity:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: ru.yandex.practicum.stats.deserialization.EventSimilarityDeserializer

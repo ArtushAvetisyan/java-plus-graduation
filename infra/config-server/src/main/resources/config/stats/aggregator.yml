@@ -15,6 +15,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       value-deserializer: ru.yandex.practicum.stats.deserialization.UserActionDeserializer
     listener:
+      concurrency: 3
       ack-mode: record
 
 app:
