@@ -27,7 +27,7 @@ public class EventSimilarityServiceImpl implements EventSimilarityService {
                     existing.setUpdatedAt(eventTimestamp);
                     repository.save(existing);
 
-                    log.info("Обновлен коэффициент сходства для пары. Событие А - {}, событие В - {}",
+                    log.debug("Обновлен коэффициент сходства для пары. Событие А - {}, событие В - {}",
                             eventSimilarity.getEventA(), eventSimilarity.getEventB());
                 },
                 () -> {
@@ -39,7 +39,7 @@ public class EventSimilarityServiceImpl implements EventSimilarityService {
                             .build();
                     repository.save(newSimilarity);
 
-                    log.info("Сохранен новый коэффициент сходства для пары. Событие А - {}, событие В - {}",
+                    log.debug("Сохранен новый коэффициент сходства для пары. Событие А - {}, событие В - {}",
                             eventSimilarity.getEventA(), eventSimilarity.getEventB());
                 }
         );

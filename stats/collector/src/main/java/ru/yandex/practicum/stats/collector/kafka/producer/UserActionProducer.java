@@ -17,7 +17,7 @@ public class UserActionProducer {
     public void send(UserActionAvro userActionAvro) {
         Long key = userActionAvro.getEventId();
         String topic = topics.getUserActionsTopic();
-        log.info("Отправка события в Kafka топик - {}. ID пользователя - {}, ID события - {}, тип действия - {}",
+        log.debug("Отправка события в Kafka топик - {}. ID пользователя - {}, ID события - {}, тип действия - {}",
                 topics.getUserActionsTopic(), userActionAvro.getUserId(), userActionAvro.getEventId(), userActionAvro.getActionType());
 
         kafkaTemplate.send(topic, key, userActionAvro).whenComplete((
@@ -25,7 +25,7 @@ public class UserActionProducer {
             if (exception != null) {
                 log.error("Ошибка при отправке события в Kafka! Топик - {}. Ошибка: {}", topic, exception.getMessage());
             } else {
-                log.info("Действие успешно отправлено в топик - {}", topic);
+                log.debug("Действие успешно отправлено в топик - {}", topic);
             }
         });
     }

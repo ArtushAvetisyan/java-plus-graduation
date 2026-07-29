@@ -30,7 +30,7 @@ public class UserActionServiceImpl implements UserActionService {
                         existing.setUpdatedAt(actionTimestamp);
                         repository.save(existing);
 
-                        log.info("Обновлен максимальный вес действия. ID пользователя - {}, ID события - {}",
+                        log.debug("Обновлен максимальный вес действия. ID пользователя - {}, ID события - {}",
                                 action.getUserId(), action.getEventId());
                     }
                 },
@@ -43,7 +43,7 @@ public class UserActionServiceImpl implements UserActionService {
                             .build();
 
                     repository.save(userAction);
-                    log.info("Зарегистрировано новое действие. ID пользователя - {}, ID события - {}",
+                    log.debug("Зарегистрировано новое действие. ID пользователя - {}, ID события - {}",
                             action.getUserId(), action.getEventId());
                 });
     }

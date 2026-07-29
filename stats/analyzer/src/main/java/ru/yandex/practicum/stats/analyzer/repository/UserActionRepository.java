@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.yandex.practicum.stats.analyzer.model.UserAction;
+import ru.yandex.practicum.stats.analyzer.repository.projections.EventWeightSumProjection;
 
 import java.util.List;
 import java.util.Optional;

@@ -23,7 +23,7 @@ public class UserActionConsumer {
             topics = "#{topics.userActionsTopic}",
             concurrency = "${spring.kafka.listener.concurrency:3}")
     public void listen(UserActionAvro action) {
-        log.info("Получено действие пользователя (aggregator): ID пользователя - {}, ID события - {}, тип события - {}",
+        log.debug("Получено действие пользователя (aggregator): ID пользователя - {}, ID события - {}, тип события - {}",
                 action.getUserId(), action.getEventId(), action.getActionType());
 
         List<EventSimilarityAvro> updatedSimilarities = aggregatorService.processUserAction(action);
@@ -31,7 +31,7 @@ public class UserActionConsumer {
             for (EventSimilarityAvro similarity : updatedSimilarities) {
                 similarityProducer.send(similarity);
             }
-            log.info("Отправлено {} обновлений сходств для события - {}", updatedSimilarities.size(), action.getEventId());
+            log.debug("Отправлено {} обновлений сходств для события - {}", updatedSimilarities.size(), action.getEventId());
         }
     }
 }

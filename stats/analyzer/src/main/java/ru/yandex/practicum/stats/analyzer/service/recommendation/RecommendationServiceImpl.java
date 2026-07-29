@@ -1,14 +1,16 @@
 package ru.yandex.practicum.stats.analyzer.service.recommendation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.proto.dashboard.RecommendedEventProto;
 import ru.yandex.practicum.stats.analyzer.model.EventSimilarity;
 import ru.yandex.practicum.stats.analyzer.model.UserAction;
 import ru.yandex.practicum.stats.analyzer.repository.EventSimilarityRepository;
-import ru.yandex.practicum.stats.analyzer.repository.EventWeightSumProjection;
 import ru.yandex.practicum.stats.analyzer.repository.UserActionRepository;
+import ru.yandex.practicum.stats.analyzer.repository.projections.EventWeightSumProjection;
+import ru.yandex.practicum.stats.analyzer.repository.projections.SimilarEventProjection;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,8 +33,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .collect(Collectors.toMap(
                         UserAction::getEventId,
                         UserAction::getMaxWeight,
-                        Math::max
-                ));
+                        Math::max));
 
         Set<Long> allInteractedEventIds = userRatings.keySet();
 
@@ -68,10 +69,24 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .map(Map.Entry::getKey)
                 .toList();
 
+        if (topCandidates.isEmpty()) return Collections.emptyList();
+
+        List<EventSimilarity> allSimilarities = eventSimilarityRepository.findAllByEventIds(topCandidates);
+        Set<Long> topCandidatesSet = new HashSet<>(topCandidates);
+        Map<Long, List<EventSimilarity>> similaritiesByCandidate = new HashMap<>();
+
+        for (EventSimilarity sim : allSimilarities) {
+            if (topCandidatesSet.contains(sim.getEventA()))
+                similaritiesByCandidate.computeIfAbsent(sim.getEventA(), k -> new ArrayList<>()).add(sim);
+
+            if (topCandidatesSet.contains(sim.getEventB()))
+                similaritiesByCandidate.computeIfAbsent(sim.getEventB(), k -> new ArrayList<>()).add(sim);
+        }
+
         List<RecommendedEventProto> recommendations = new ArrayList<>();
 
         for (Long candidateId : topCandidates) {
-            List<EventSimilarity> candidateSimilarities = eventSimilarityRepository.findAllByEventId(candidateId);
+            List<EventSimilarity> candidateSimilarities = similaritiesByCandidate.getOrDefault(candidateId, Collections.emptyList());
 
             List<EventSimilarity> topKNeighbors = candidateSimilarities.stream()
                     .filter(sim -> {
@@ -110,22 +125,15 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     public List<RecommendedEventProto> getSimilarEvents(long eventId, long userId, int maxResults) {
-        Set<Long> userEvents = userActionRepository.findInteractedEventIdsByUserId(userId);
-        List<EventSimilarity> similarities = eventSimilarityRepository.findAllByEventId(eventId);
+        List<SimilarEventProjection> similarEvents = eventSimilarityRepository.findSimilarEventsForUser(
+                eventId,
+                userId,
+                Limit.of(maxResults));
 
-        return similarities.stream()
-                .map(similarity -> {
-                    long otherEventId = Objects.equals(similarity.getEventA(), eventId)
-                            ? similarity.getEventB()
-                            : similarity.getEventA();
-                    return new AbstractMap.SimpleEntry<>(otherEventId, similarity.getScore());
-                })
-                .filter(entry -> !userEvents.contains(entry.getKey()))
-                .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                .limit(maxResults)
-                .map(entry -> RecommendedEventProto.newBuilder()
-                        .setEventId(entry.getKey())
-                        .setScore(entry.getValue())
+        return similarEvents.stream()
+                .map(similarEventProjection -> RecommendedEventProto.newBuilder()
+                        .setEventId(similarEventProjection.getEventId())
+                        .setScore(similarEventProjection.getScore())
                         .build())
                 .toList();
     }

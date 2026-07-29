@@ -18,7 +18,7 @@ public class EventSimilarityConsumer {
             groupId = "${app.kafka.group-ids.events-similarity}",
             containerFactory = "eventSimilarityKafkaListenerContainerFactory")
     public void listen(EventSimilarityAvro eventSimilarity) {
-        log.info("Получено сообщение о сходстве мероприятий (analyzer): Событие A - {}, событие В - {}",
+        log.debug("Получено сообщение о сходстве мероприятий (analyzer): Событие A - {}, событие В - {}",
                 eventSimilarity.getEventA(), eventSimilarity.getEventB());
         eventSimilarityService.processSimilarity(eventSimilarity);
     }

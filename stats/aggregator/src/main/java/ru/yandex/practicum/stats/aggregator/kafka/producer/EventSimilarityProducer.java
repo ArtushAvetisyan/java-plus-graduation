@@ -18,7 +18,7 @@ public class EventSimilarityProducer {
     public void send(EventSimilarityAvro similarityAvro) {
         String key = similarityAvro.getEventA() + ":" + similarityAvro.getEventB();
         String topic = topics.getEventsSimilarityTopic();
-        log.info("Отправка коэффициента сходства в Kafka топик - {}. ID события А - {}, ID события B - {}",
+        log.debug("Отправка коэффициента сходства в Kafka топик - {}. ID события А - {}, ID события B - {}",
                 topic, similarityAvro.getEventA(), similarityAvro.getEventB());
 
         kafkaTemplate.send(topic, key, similarityAvro).whenComplete((
@@ -27,7 +27,7 @@ public class EventSimilarityProducer {
                 log.error("Ошибка при отправке коэффициента сходства в Kafka! Топик - {}. Ошибка - {}",
                         topic, exception.getMessage());
             } else {
-                log.info("Коэффициент сходства успешно отправлено в топик - {}", topic);
+                log.debug("Коэффициент сходства успешно отправлено в топик - {}", topic);
             }
         });
     }

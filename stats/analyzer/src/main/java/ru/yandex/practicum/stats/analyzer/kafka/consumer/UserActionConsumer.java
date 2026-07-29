@@ -18,7 +18,7 @@ public class UserActionConsumer {
             groupId = "${app.kafka.group-ids.user-actions}",
             containerFactory = "userActionKafkaListenerContainerFactory")
     public void listen(UserActionAvro action) {
-        log.info("Получено действие пользователя (analyzer): ID пользователя - {}, ID события - {}, тип события - {}",
+        log.debug("Получено действие пользователя (analyzer): ID пользователя - {}, ID события - {}, тип события - {}",
                 action.getUserId(), action.getEventId(), action.getActionType());
         userActionService.processAction(action);
     }
