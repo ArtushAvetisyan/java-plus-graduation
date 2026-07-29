@@ -45,6 +45,7 @@ public class AggregatorServiceImpl implements AggregatorService {
 
             Map<Long, Double> usersForEventB = entry.getValue();
             double weightB = usersForEventB.getOrDefault(userId, 0.0);
+            if (weightB == 0.0) continue;
 
             double oldMin = Math.min(oldWeight, weightB);
             double newMin = Math.min(newWeight, weightB);
