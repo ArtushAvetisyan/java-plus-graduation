@@ -55,10 +55,11 @@ public class AggregatorServiceImpl implements AggregatorService {
 
             if (deltaMin > 0.0) putMinWeightSum(eventA, eventB, newSmin);
 
+            if (newSmin <= 0.0) continue;
+
             double sumB = eventWeightsSums.getOrDefault(eventB, 0.0);
             double similarity = 0.0;
             if (sumA > 0 && sumB > 0) similarity = newSmin / Math.sqrt(sumA * sumB);
-            if (similarity <= 0.0) continue;
 
             long first = Math.min(eventA, eventB);
             long second = Math.max(eventA, eventB);
