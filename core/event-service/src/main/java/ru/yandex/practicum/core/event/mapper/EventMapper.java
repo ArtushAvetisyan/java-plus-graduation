@@ -16,9 +16,8 @@ public interface EventMapper {
     @Mapping(target = "id", source = "event.id")
     @Mapping(target = "initiator", source = "initiator")
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
-    @Mapping(target = "views", source = "views")
     @Mapping(target = "rating", source = "rating")
-    EventShortDto toEventShortDto(Event event, UserShortDto initiator, Long confirmedRequests, Long views, Long rating);
+    EventShortDto toEventShortDto(Event event, UserShortDto initiator, Long confirmedRequests, Double rating);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
@@ -32,9 +31,8 @@ public interface EventMapper {
     @Mapping(target = "state", source = "event.eventState")
     @Mapping(target = "initiator", source = "initiator")
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
-    @Mapping(target = "views", source = "views")
     @Mapping(target = "rating", source = "rating")
-    EventFullDto toEventFullDto(Event event, UserShortDto initiator, Long confirmedRequests, Long views, Long rating);
+    EventFullDto toEventFullDto(Event event, UserShortDto initiator, Long confirmedRequests, Double rating);
 
     Location toLocation(LocationDto locationDto);
 

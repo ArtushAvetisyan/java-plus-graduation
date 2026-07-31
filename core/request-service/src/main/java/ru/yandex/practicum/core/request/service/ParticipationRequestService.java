@@ -10,7 +10,7 @@ import java.util.Map;
 
 public interface ParticipationRequestService {
 
-    ParticipationRequestDto addParticipationRequest(Long userId, Long eventId);
+    ParticipationRequestDto addParticipationRequest(Long userId, Long eventId, Integer size);
 
     ParticipationRequestDto cancelParticipationRequest(Long userId, Long requestId);
 

@@ -1,0 +1,25 @@
+server:
+  port: 0
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: ru.yandex.practicum.stats.serialization.GeneralAvroSerializer
+
+    consumer:
+      group-id: aggregator-group
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: ru.yandex.practicum.stats.deserialization.UserActionDeserializer
+    listener:
+      concurrency: 3
+      ack-mode: record
+
+app:
+  kafka:
+    topics:
+      user-actions: "stats.user-actions.v1"
+      events-similarity: "stats.events-similarity.v1"
