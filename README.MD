@@ -1,10 +1,25 @@
-# ExploreWithMe
+# ExploreWithMe — Microservices Event & Recommendation Platform
 
-Данный проект представляет собой систему для поиска событий и обмена впечатлениями.
+![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=flat-square&logo=springboot)
+![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.x-blue?style=flat-square&logo=spring)
+![gRPC](https://img.shields.io/badge/gRPC-Framework-blue?style=flat-square&logo=grpc)
+![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-Avro-red?style=flat-square&logo=apachekafka)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-DB-blue?style=flat-square&logo=postgresql)
+
+Платформа **ExploreWithMe** — это микросервисная система для поиска интересных мероприятий, организации совместного досуга, управления заявками на участие, оценки событий и получения персональных рекомендаций на основе потоковой аналитики действий пользователей.
 
 ---
 
-## 1. Архитектура системы
+## 📋 Оглавление
+- [О платформе](#-о-платформе)
+- [Архитектурные решения](#-архитектурные-решения)
+- [Состав микросервисов](#-состав-микросервисов)
+- [Технологический стек](#-технологический-стек)
+- [Основной бизнес-контур (Core)](#-основной-бизнес-контур-core)
+- [Контур статистики и рекомендаций (Stats)](#-контур-статистики-и-рекомендаций-stats)
+- [Топики Kafka и форматы данных](#-топики-kafka-и-форматы-данных)
+- [Внешний API](#-внешний-api)
 
 Проект разделен на группирующие модули `infra` (инфраструктура), `core` (основная бизнес-логика) и `stats` (сервисы
 статистики и рекомендаций).
@@ -39,12 +54,15 @@
 
 ---
 
-## 2. Внутренний API (Межсервисное взаимодействие)
+## 🏗 Архитектурные решения
 
 Взаимодействие между микросервисами осуществляется декларативно через **OpenFeign** с использованием поиска сервисов в
 **Eureka**.
 
-### Основные внутренние контракты:
+1. **API Gateway Pattern**: Единый входной шлюз **`gateway-server`** (порт `8080`) на базе **Spring Cloud Gateway** осуществляет прием всех внешних клиентских запросов и их маршрутизацию во внутренние микросервисы.
+2. **Service Discovery & Config**: Центр управления конфигурациями **Spring Cloud Config** и реестр сервисов **Spring Cloud Eureka** для динамического обнаружения и настройки элементов системы.
+3. **Contract Sharing & Schemas (`interaction-api` & `serialization`)**: Вынесение общих DTO, Feign-клиентов и контрактов в библиотеку `interaction-api`, а Avro и Proto схем — в модуль `serialization`.
+4. **Event-Driven Recommendation Engine**: Потоковая передача действий пользователей через **gRPC** и **Apache Kafka** с сериализацией в **Apache Avro** для расчета рекомендаций и сходства событий в реальном времени.
 
 1. **`event-service` ↔ `request-service`**, **`event-service` ↔ `rating-service`**, **`event-service` ↔ `user-service`**
 
@@ -88,7 +106,7 @@
 
 ## 4. Внешний API
 
-Все внешние запросы принимаются через API-шлюз на порту `8080`.
+Все внешние запросы клиентов принимаются через API-шлюз **`gateway-server`** на порту **`8080`**.
 
 * **Спецификация внешнего API (Основной
   сервис):** https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-main-service-spec.json
